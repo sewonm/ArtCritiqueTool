@@ -1,54 +1,52 @@
 body {
-    font-family: 'Noto Sans', Arial, sans-serif;
+    font-family: 'Times New Roman', serif;
+    background-color: #f3f0e5; /* Light parchment color */
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-image: url('red-checkered-fabric-texture-background_469558-16473.avif');
-    background-size: cover;
-    background-position: center;
 }
 
 .container {
     display: flex;
     align-items: center;
-    background-color: rgba(255, 239, 204, 0.9);
-    border-radius: 30px;
+    background-color: #ffffff;
+    border-radius: 15px;
     padding: 20px;
     box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
-    border: 5px solid #b22222;
+    border: 3px solid #333333; /* Dark border for vintage look */
 }
 
-#fortune-cookie {
-    width: 500px;
-    margin: 0 20px;
+#art-critic {
+    width: 100px; /* Adjust as needed */
+    margin-right: 20px;
 }
 
 .title {
-    font-size: 20px;
-    color: #b22222;
-    margin-bottom: 10px;
+    font-size: 24px;
+    color: #333333;
     text-align: center;
-    font-family: 'Press Start 2P', cursive;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
 }
 
 .chat-container {
     width: 400px;
-    background-color: #fff0e6;
-    border-radius: 20px;
+    background-color: #f9f4ef;
+    border-radius: 10px;
     padding: 20px;
-    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chat-box {
     height: 300px;
     overflow-y: auto;
-    margin-bottom: 10px;
+    border: 1px solid #e0ddd5;
     padding: 10px;
-    background-color: #fff;
-    border-radius: 15px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .input-area {
@@ -57,45 +55,39 @@ body {
 }
 
 input[type="text"] {
-    width: calc(100% - 70px);
+    width: calc(100% - 80px);
     padding: 10px;
-    border: 1px solid #b22222;
-    border-radius: 20px;
-    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     outline: none;
-    transition: border 0.3s;
-}
-
-input[type="text"]:focus {
-    border: 2px solid #f08080;
 }
 
 button {
     padding: 10px 15px;
-    background-color: #b22222;
-    color: white;
+    background-color: #333333;
+    color: #ffffff;
     border: none;
-    border-radius: 20px;
+    border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #f08080;
+    background-color: #555555;
 }
 
 .message {
-    padding: 10px;
+    padding: 8px;
     margin-bottom: 10px;
-    border-radius: 15px;
+    border-radius: 5px;
 }
 
 .message.user {
-    background-color: #ffe4e1;
+    background-color: #e0ddd5;
     text-align: right;
 }
 
 .message.bot {
-    background-color: #f5deb3;
+    background-color: #d1c8b1;
     text-align: left;
 }
