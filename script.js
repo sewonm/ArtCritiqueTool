@@ -1,3 +1,12 @@
+function showChat() {
+    document.getElementById('homepage').style.display = 'none';
+    document.getElementById('chatpage').style.display = 'block';
+}
+
+function showHome() {
+    document.getElementById('chatpage').style.display = 'none';
+    document.getElementById('homepage').style.display = 'block';
+}
 // Trigger the hidden file input when the "+" button is clicked
 document.getElementById('file-upload-btn').addEventListener('click', () => {
     document.getElementById('image-input').click();
