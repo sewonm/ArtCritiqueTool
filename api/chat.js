@@ -34,7 +34,7 @@ export default async function handler(req, res) {
                     messages: [
                         {
                             role: 'system',
-                            content: "You are a friendly and knowledgeable art critic who responds like a human. If the user asks about art, provides an artwork critique, or mentions a specific art piece or style, provide insightful analysis or commentary. If the user says something unrelated to art or greets you, respond in a friendly, conversational way without bringing up art unless it’s mentioned."
+                            content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
                         },
                         { role: 'user', content: userMessage || 'No message provided' }
                     ]
