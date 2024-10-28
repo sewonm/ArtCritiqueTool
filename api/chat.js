@@ -29,16 +29,16 @@ export default async function handler(req, res) {
             const image = files.image;
 
             try {
-                // Log the prompt to verify it is correctly structured
                 const payload = {
                     model: 'gpt-3.5-turbo',
                     messages: [
                         { role: 'system', content: 'You are an insightful and concise art critic. Respond with brief but thoughtful critiques, summarizing the essence of the artwork or answering art-related questions in 3-4 sentences.' },
-                        { role: 'user', content: userMessage }
+                        { role: 'user', content: userMessage || 'No message provided' }
                     ]
                 };
 
-                console.log("Payload sent to OpenAI API:", payload);
+                console.log("Payload sent to OpenAI API:", JSON.stringify(payload, null, 2));
+                console.log("API Key present:", Boolean(process.env.OPENAI_API_KEY));
 
                 const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
                     headers: {
