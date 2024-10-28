@@ -31,10 +31,21 @@ export default async function handler(req, res) {
             }
 
             try {
-                // Prepare FormData to send both the image and the text prompt to GPT-4 Turbo
+                // Prepare FormData to send both the image and the prompt to GPT-4 Turbo
                 const formData = new FormData();
                 formData.append('model', 'gpt-4-turbo');
-                formData.append('prompt', userMessage);
+
+                // System message to guide GPT-4 Turbo's response
+                const systemMessage = `
+                    You are an expert art critic. Analyze the uploaded artwork for composition, style, color use, and technique.
+                    If the user includes a specific question, address that as well in your critique.
+                `;
+
+                formData.append('messages', JSON.stringify([
+                    { role: 'system', content: systemMessage },
+                    { role: 'user', content: userMessage }
+                ]));
+
                 formData.append('file', fs.createReadStream(image.filepath), {
                     filename: image.originalFilename,
                     contentType: image.mimetype,
