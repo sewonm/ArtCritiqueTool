@@ -6,7 +6,7 @@ dotenv.config();
 
 export const config = {
     api: {
-        bodyParser: false, // Disable default body parser
+        bodyParser: false, // Disable default body parser to use formidable
     },
 };
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const form = new formidable.IncomingForm();
+        const form = formidable({ multiples: true }); // Initialize formidable
 
         form.parse(req, async (err, fields, files) => {
             if (err) {
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
             const image = files.image;
 
             try {
-                // Construct your prompt as needed
+                // Construct the prompt with both text and image critique
                 const response = await axios.post('https://api.openai.com/v1/chat/completions', {
                     model: 'gpt-3.5-turbo',
                     messages: [
