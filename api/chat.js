@@ -25,10 +25,15 @@ export default async function handler(req, res) {
                 return res.status(500).json({ error: 'Error parsing form data.' });
             }
 
-            const userMessage = fields.message;
+            let userMessage = fields.message;
 
-            // Check if userMessage exists, and respond immediately if it's missing or empty
-            if (!userMessage || userMessage.trim() === "") {
+            // Ensure userMessage is a string
+            if (typeof userMessage !== 'string') {
+                userMessage = String(userMessage);
+            }
+
+            // Check if userMessage is empty or whitespace-only
+            if (!userMessage.trim()) {
                 return res.status(400).json({ error: 'User message is required.' });
             }
 
