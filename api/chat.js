@@ -19,14 +19,18 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const form = formidable({ multiples: true });
 
-        form.parse(req, async (err, fields, files) => {
+        form.parse(req, async (err, fields) => {
             if (err) {
                 console.error('Error parsing form:', err);
                 return res.status(500).json({ error: 'Error parsing form data.' });
             }
 
             const userMessage = fields.message;
-            const image = files.image;
+
+            // Check if userMessage exists, and respond immediately if it's missing or empty
+            if (!userMessage || userMessage.trim() === "") {
+                return res.status(400).json({ error: 'User message is required.' });
+            }
 
             try {
                 const payload = {
@@ -34,14 +38,11 @@ export default async function handler(req, res) {
                     messages: [
                         {
                             role: 'system',
-                            content: "You are a conversational art critic. Only discuss art when asked directly."
+                            content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
                         },
-                        { role: 'user', content: 'What is your favorite art style?' }
+                        { role: 'user', content: userMessage }
                     ]
                 };
-
-                console.log("Payload sent to OpenAI API:", JSON.stringify(payload, null, 2));
-                console.log("API Key present:", Boolean(process.env.OPENAI_API_KEY));
 
                 const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
                     headers: {
