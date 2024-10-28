@@ -32,8 +32,8 @@ export default async function handler(req, res) {
                 const payload = {
                     model: 'gpt-3.5-turbo',
                     messages: [
-                        { role: 'system', content: 'You are an insightful and concise art critic. Respond with brief but thoughtful critiques, summarizing the essence of the artwork or answering art-related questions in 3-4 sentences.' },
-                        { role: 'user', content: userMessage || 'No message provided' }
+                        { role: 'system', content: 'You are an insightful and concise art critic.' },
+                        { role: 'user', content: 'What do you think about impressionist art?' }
                     ]
                 };
 
