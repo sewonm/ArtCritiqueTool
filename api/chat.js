@@ -1,8 +1,6 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 import formidable from 'formidable';
-
-dotenv.config();
+import fs from 'fs';
 
 export const config = {
     api: {
@@ -19,43 +17,38 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const form = formidable({ multiples: true });
 
-        form.parse(req, async (err, fields) => {
+        form.parse(req, async (err, fields, files) => {
             if (err) {
                 console.error('Error parsing form:', err);
                 return res.status(500).json({ error: 'Error parsing form data.' });
             }
 
-            let userMessage = fields.message;
+            const userMessage = fields.message || '';
+            const image = files.image;
 
-            // Ensure userMessage is a string
-            if (typeof userMessage !== 'string') {
-                userMessage = String(userMessage);
-            }
-
-            // Check if userMessage is empty or whitespace-only
-            if (!userMessage.trim()) {
-                return res.status(400).json({ error: 'User message is required.' });
+            if (!image) {
+                return res.status(400).json({ error: 'No image provided.' });
             }
 
             try {
-                const payload = {
-                    model: 'gpt-3.5-turbo',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
-                        },
-                        { role: 'user', content: userMessage }
-                    ]
-                };
-
-                const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
-                    headers: {
-                        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    }
+                // Prepare FormData to send both the image and the text prompt to GPT-4 Turbo
+                const formData = new FormData();
+                formData.append('model', 'gpt-4-turbo');
+                formData.append('prompt', userMessage);
+                formData.append('file', fs.createReadStream(image.filepath), {
+                    filename: image.originalFilename,
+                    contentType: image.mimetype,
                 });
 
+                // Send the image and prompt to GPT-4 Turbo API
+                const response = await axios.post('https://api.openai.com/v1/chat/completions', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                        ...formData.getHeaders(),
+                    },
+                });
+
+                // Send back the AI's critique
                 res.status(200).json(response.data);
 
             } catch (error) {
@@ -64,6 +57,11 @@ export default async function handler(req, res) {
                     error: 'Error connecting to OpenAI API.',
                     details: error.message || error.response?.data || error
                 });
+            } finally {
+                // Clean up the file after processing
+                if (image && fs.existsSync(image.filepath)) {
+                    fs.unlinkSync(image.filepath);
+                }
             }
         });
     } else {
