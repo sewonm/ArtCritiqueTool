@@ -7,12 +7,10 @@ async function sendMessage() {
     const userInput = document.getElementById('user-input').value;
     const imageInput = document.getElementById('image-input').files[0];
 
-    if (!userInput && !imageInput) return; // Do nothing if no text or image is provided
+    if (!userInput && !imageInput) return;
 
-    // Display the user’s text input if provided
     if (userInput) displayMessage(userInput, 'user');
 
-    // Prepare form data for sending text and image together
     const formData = new FormData();
     formData.append('message', userInput);
     if (imageInput) {
@@ -23,18 +21,23 @@ async function sendMessage() {
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            body: formData // Send FormData directly
+            body: formData
         });
 
         const data = await response.json();
-        const botMessage = data.choices[0].message.content;
-        displayMessage(botMessage, 'bot');
+
+        // Check if data.choices exists and has a response
+        if (data.choices && data.choices.length > 0) {
+            const botMessage = data.choices[0].message.content;
+            displayMessage(botMessage, 'bot');
+        } else {
+            displayMessage("The art critic couldn't respond. Please try again.", 'bot');
+        }
     } catch (error) {
         console.error('Error:', error);
         displayMessage("The art critic is silent... Please try again.", 'bot');
     }
 
-    // Clear input fields
     document.getElementById('user-input').value = '';
     document.getElementById('image-input').value = '';
 }
