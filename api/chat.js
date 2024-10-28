@@ -1,5 +1,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv'; // Only needed if running locally
+import FormData from 'form-data'; // Required for handling FormData
+import fs from 'fs'; // Required for reading image file (if processing further)
 dotenv.config();
 
 export default async function handler(req, res) {
@@ -9,14 +11,25 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const userMessage = req.body.message;
+        const { message } = req.body;
+        const image = req.file; // Access uploaded image
 
         try {
+            // If there is an image, send an additional prompt to ask about the image
+            let critiquePrompt = 'You are an insightful and concise art critic.';
+
+            if (message) {
+                critiquePrompt += ` Respond with thoughtful critiques, summarizing the essence of the artwork or answering art-related questions. The user has asked: "${message}"`;
+            }
+
+            if (image) {
+                critiquePrompt += ' Also critique the uploaded artwork image in detail, focusing on artistic techniques, color balance, and composition.';
+            }
+
             const response = await axios.post('https://api.openai.com/v1/chat/completions', {
                 model: 'gpt-3.5-turbo',
                 messages: [
-                    { role: 'system', content: 'You are an insightful and concise art critic. Respond with brief but thoughtful critiques, summarizing the essence of the artwork or answering art-related questions in 3-4 sentences.' },
-                    { role: 'user', content: `The user has asked: "${userMessage}"` }
+                    { role: 'system', content: critiquePrompt }
                 ]
             }, {
                 headers: {

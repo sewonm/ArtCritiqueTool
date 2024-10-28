@@ -5,27 +5,38 @@ document.getElementById('user-input').addEventListener('keypress', function (e) 
 
 async function sendMessage() {
     const userInput = document.getElementById('user-input').value;
-    if (!userInput) return;
+    const imageInput = document.getElementById('image-input').files[0];
 
-    displayMessage(userInput, 'user');
+    if (!userInput && !imageInput) return; // Do nothing if no text or image is provided
 
-    const artCriticPrompt = `You are an insightful and knowledgeable art critic. Offer a thoughtful response about art, discussing artistic techniques, historical context, or detailed critique. The user has asked: "${userInput}"`;
+    // Display the user’s text input if provided
+    if (userInput) displayMessage(userInput, 'user');
+
+    // Prepare form data for sending text and image together
+    const formData = new FormData();
+    formData.append('message', userInput);
+    if (imageInput) {
+        displayMessage("Uploading image...", 'user');
+        formData.append('image', imageInput);
+    }
 
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: artCriticPrompt })
+            body: formData // Send FormData directly
         });
 
         const data = await response.json();
         const botMessage = data.choices[0].message.content;
         displayMessage(botMessage, 'bot');
     } catch (error) {
+        console.error('Error:', error);
         displayMessage("The art critic is silent... Please try again.", 'bot');
     }
 
+    // Clear input fields
     document.getElementById('user-input').value = '';
+    document.getElementById('image-input').value = '';
 }
 
 function displayMessage(message, sender) {
