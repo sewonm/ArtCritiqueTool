@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
             try {
                 const payload = {
-                    model: 'gpt-4o-mini',
+                    model: 'gpt-3.5-turbo',
                     messages: [
                         {
                             role: 'system',
