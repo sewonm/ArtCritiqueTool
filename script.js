@@ -1,3 +1,8 @@
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+document.getElementById('user-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') sendMessage();
+});
+
 document.getElementById('file-upload-btn').addEventListener('click', () => {
     document.getElementById('image-input').click();
 });
