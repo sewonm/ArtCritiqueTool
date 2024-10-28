@@ -15,7 +15,7 @@ export default async function handler(req, res) {
             const response = await axios.post('https://api.openai.com/v1/chat/completions', {
                 model: 'gpt-3.5-turbo',
                 messages: [
-                    { role: 'system', content: 'You are an insightful and knowledgeable art critic. Respond thoughtfully, offering detailed critiques, art history insights, and explanations of artistic techniques and styles.' },
+                    { role: 'system', content: 'You are an insightful and concise art critic. Respond with brief but thoughtful critiques, summarizing the essence of the artwork or answering art-related questions in 3-4 sentences.' },
                     { role: 'user', content: `The user has asked: "${userMessage}"` }
                 ]
             }, {
