@@ -29,6 +29,7 @@ async function sendMessage() {
     document.getElementById('user-input').value = '';
     document.getElementById('image-input').value = '';
 
+    // Show image in chatbox if uploaded
     if (imageInput) {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -37,26 +38,30 @@ async function sendMessage() {
         reader.readAsDataURL(imageInput);
     }
 
-    // Handle the backend submission if needed (e.g., send to server)
-    // Uncomment and modify the following code based on your backend requirements
-    /*
-    try {
-        const formData = new FormData();
-        formData.append('message', userInput);
-        if (imageInput) formData.append('image', imageInput);
+    // Prepare form data for sending text and image together
+    const formData = new FormData();
+    formData.append('message', userInput);
+    if (imageInput) formData.append('image', imageInput);
 
+    // Send data to backend
+    try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
-        displayMessage(data.reply, 'bot'); // Customize based on your backend response
+        
+        // Display AI response if it exists
+        if (data && data.choices && data.choices[0] && data.choices[0].message.content) {
+            displayMessage(data.choices[0].message.content, 'bot');
+        } else {
+            displayMessage("The AI is thinking... Please try again.", 'bot');
+        }
     } catch (error) {
         console.error("Error:", error);
         displayMessage("An error occurred. Please try again.", 'bot');
     }
-    */
 }
 
 // Modified displayMessage function to handle HTML content
