@@ -6,7 +6,7 @@ dotenv.config();
 
 export const config = {
     api: {
-        bodyParser: false, // Disable default body parser to use formidable
+        bodyParser: false,
     },
 };
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const form = formidable({ multiples: true }); // Initialize formidable
+        const form = formidable({ multiples: true });
 
         form.parse(req, async (err, fields, files) => {
             if (err) {
@@ -29,14 +29,18 @@ export default async function handler(req, res) {
             const image = files.image;
 
             try {
-                // Construct the prompt with both text and image critique
-                const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                // Log the prompt to verify it is correctly structured
+                const payload = {
                     model: 'gpt-3.5-turbo',
                     messages: [
                         { role: 'system', content: 'You are an insightful and concise art critic. Respond with brief but thoughtful critiques, summarizing the essence of the artwork or answering art-related questions in 3-4 sentences.' },
                         { role: 'user', content: userMessage }
                     ]
-                }, {
+                };
+
+                console.log("Payload sent to OpenAI API:", payload);
+
+                const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
                     headers: {
                         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
                         'Content-Type': 'application/json'
