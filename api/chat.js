@@ -36,7 +36,7 @@ export default async function handler(req, res) {
                             role: 'system',
                             content: "You are a conversational art critic. Only discuss art when asked directly."
                         },
-                        { role: 'user', content: userMessage || 'No message provided' }
+                        { role: 'user', content: 'What is your favorite art style?' }
                     ]
                 };
 
