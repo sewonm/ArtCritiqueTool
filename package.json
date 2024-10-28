@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "**Fortune Cookie Bot**",
   "main": "script.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -15,6 +15,7 @@
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "formidable": "^3.5.2"
   }
 }
