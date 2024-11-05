@@ -39,17 +39,15 @@ export default async function handler(req, res) {
 
             try {
                 const payload = {
-                model: 'gpt-4o-mini',
-                messages: [
-                  {
-                    role: 'user',
-                    content: [
-                      { type: 'text', text: "You are an engine interpreting abstract Etch-a-Sketch drawings with black on grey backgrounds. Follow these steps: 1. Playful Brainstorm: List the top 10 most likely literal interpretations. 2. Brevity: Use 1-3 words per item, up to 5 words max. 3. Avoid Direct References: Do not mention 'lines' or geometric terms. 4. Reverse Ekphrasis: Focus on litearl imaginative readings of what the lines could represent. These should be plain and easy for a child or skeptic to understand. 5. Speculative Elements: Include possible genres, similar artists, and stylistic categories. 6. Progressive Roasting: Add playful criticism that increases in intensity towards the end. 7. Unified Format: Present as a concise, list-based output like a nutrition label."},
-                      { type: 'image_url', image_url: { url: `data:image/png;base64,${imageBase64}` } },
-                    ],
-                  },
-                ],
-                max_tokens: 300,
+                    model: 'gpt-3.5-turbo',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
+                        },
+                        { role: 'user', content: userMessage }
+                    ]
+                };
 
                 const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
                     headers: {
