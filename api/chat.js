@@ -1,7 +1,7 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import formidable from 'formidable';
-import fs from 'fs';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -18,11 +18,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const form = formidable({
-            multiples: true,
-            keepExtensions: true,
-            uploadDir: '/tmp', // Temporary directory for serverless environments like Vercel
-        });
+        const form = formidable({ multiples: true });
 
         form.parse(req, async (err, fields, files) => {
             if (err) {
@@ -43,27 +39,38 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: 'User message or image is required.' });
             }
 
-            // Encode the image file as a base64 string if an image is provided
-            let imageBase64 = null;
+            let imageUrl = null;
+
+            // If an image is uploaded, upload it to Vercel Blob
             if (image) {
                 try {
-                    const imagePath = image.filepath || image.path;
-                    if (!imagePath) {
-                        console.error('Filepath is missing.');
-                        return res.status(400).json({ error: 'Filepath is missing or undefined.' });
+                    const blobResponse = await fetch('https://api.vercel.com/v1/blobs', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
+                            'Content-Type': 'application/octet-stream',
+                        },
+                        body: fs.createReadStream(image.filepath || image.path),
+                    });
+
+                    const blobData = await blobResponse.json();
+
+                    if (blobResponse.ok && blobData.url) {
+                        imageUrl = blobData.url;
+                        console.log('Image uploaded to Vercel Blob:', imageUrl);
+                    } else {
+                        console.error('Failed to upload image to Vercel Blob:', blobData);
+                        return res.status(500).json({ error: 'Failed to upload image to Vercel Blob.' });
                     }
-            
-                    console.log('Reading image from:', imagePath);
-                    const imageBuffer = await fs.promises.readFile(imagePath);
-                    imageBase64 = imageBuffer.toString('base64');
+
                 } catch (error) {
-                    console.error('Error reading image file:', error);
-                    return res.status(500).json({ error: 'Error processing the image file.' });
+                    console.error('Error uploading image to Vercel Blob:', error);
+                    return res.status(500).json({ error: 'Error uploading image to Vercel Blob.' });
                 }
             }
 
             try {
-                // Construct the base messages array
+                // Construct the message payload for OpenAI API
                 const messages = [
                     {
                         role: 'system',
@@ -71,13 +78,13 @@ export default async function handler(req, res) {
                     }
                 ];
 
-                // Add user message if provided
+                // Add the user message if provided
                 if (userMessage.trim()) {
                     messages.push({ role: 'user', content: userMessage });
                 }
 
-                // If an image is provided, add a specific critique prompt
-                if (imageBase64) {
+                // If an image URL is available, ask for a critique of the artwork
+                if (imageUrl) {
                     messages.push(
                         {
                             role: 'user',
@@ -86,7 +93,7 @@ export default async function handler(req, res) {
                         {
                             type: 'image_url',
                             image_url: {
-                                url: `data:image/png;base64,${imageBase64}`
+                                url: imageUrl
                             }
                         }
                     );
@@ -113,11 +120,6 @@ export default async function handler(req, res) {
                     error: 'Error connecting to OpenAI API.',
                     details: error.message || error.response?.data || error
                 });
-            } finally {
-                // Clean up the uploaded image file after processing
-                if (image && fs.existsSync(image.file.path)) {
-                    fs.unlinkSync(image.file.path);
-                }
             }
         });
     } else {
