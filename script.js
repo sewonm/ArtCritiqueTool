@@ -1,3 +1,4 @@
+// Function to switch between homepage and chat interface
 function showChat() {
     document.getElementById('homepage').style.display = 'none';
     document.getElementById('chatpage').style.display = 'block';
@@ -7,6 +8,7 @@ function showHome() {
     document.getElementById('chatpage').style.display = 'none';
     document.getElementById('homepage').style.display = 'block';
 }
+
 // Trigger the hidden file input when the "+" button is clicked
 document.getElementById('file-upload-btn').addEventListener('click', () => {
     document.getElementById('image-input').click();
@@ -18,7 +20,7 @@ document.getElementById('image-input').addEventListener('change', function () {
     if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            displayMessage(`<img src="${e.target.result}" alt="Uploaded Image">`, 'user', true);
+            displayMessage(`<img src="${e.target.result}" alt="Uploaded Image" class="uploaded-image">`, 'user', true);
         };
         reader.readAsDataURL(file);
     }
@@ -29,7 +31,8 @@ async function sendMessage() {
     const userInput = document.getElementById('user-input').value;
     const imageInput = document.getElementById('image-input').files[0];
 
-    if (!userInput && !imageInput) return; // Prevent empty submissions
+    // Prevent empty submissions
+    if (!userInput && !imageInput) return;
 
     // Display the user's text input in the chat
     if (userInput) displayMessage(userInput, 'user');
@@ -38,16 +41,16 @@ async function sendMessage() {
     document.getElementById('user-input').value = '';
     document.getElementById('image-input').value = '';
 
-    // Show image in chatbox if uploaded
+    // Display the image in the chatbox if uploaded
     if (imageInput) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            displayMessage(`<img src="${e.target.result}" alt="Uploaded Image">`, 'user', true);
+            displayMessage(`<img src="${e.target.result}" alt="Uploaded Image" class="uploaded-image">`, 'user', true);
         };
         reader.readAsDataURL(imageInput);
     }
 
-    // Prepare form data for sending text and image together
+    // Prepare form data for sending both text and image
     const formData = new FormData();
     formData.append('message', userInput);
     if (imageInput) formData.append('image', imageInput);
@@ -60,7 +63,7 @@ async function sendMessage() {
         });
 
         const data = await response.json();
-        
+
         // Display AI response if it exists
         if (data && data.choices && data.choices[0] && data.choices[0].message.content) {
             displayMessage(data.choices[0].message.content, 'bot');
@@ -78,7 +81,7 @@ function displayMessage(content, sender, isHtml = false) {
     const chatBox = document.getElementById('chat-box');
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender);
-    
+
     if (isHtml) {
         messageElement.innerHTML = content; // Allows HTML for image display
     } else {
