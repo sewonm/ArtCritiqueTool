@@ -1,7 +1,7 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
-import formidable from 'formidable';
-import fetch from 'node-fetch';
+const axios = require('axios');
+const dotenv = require('dotenv');
+const formidable = require('formidable');
+const fs = require('fs');
 
 dotenv.config();
 
