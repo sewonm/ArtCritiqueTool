@@ -44,13 +44,13 @@ export default async function handler(req, res) {
             if (image) {
                 try {
                     // Verify the image object and its filepath
-                    if (!image.filepath) {
+                    if (!image.file.path) {
                         console.error('Image file is missing or filepath is undefined.');
                         return res.status(400).json({ error: 'Image file is missing or invalid.' });
                     }
             
                     console.log('File details:', image);
-                    const imageBuffer = fs.readFileSync(image.filepath);
+                    const imageBuffer = fs.readFileSync(image.file.path);
                     imageBase64 = imageBuffer.toString('base64');
                 } catch (error) {
                     console.error('Error reading image file:', error);
@@ -111,8 +111,8 @@ export default async function handler(req, res) {
                 });
             } finally {
                 // Clean up the uploaded image file after processing
-                if (image && fs.existsSync(image.filepath)) {
-                    fs.unlinkSync(image.filepath);
+                if (image && fs.existsSync(image.file.path)) {
+                    fs.unlinkSync(image.file.path);
                 }
             }
         });
