@@ -21,8 +21,7 @@ export default async function handler(req, res) {
         const form = formidable({
             multiples: true,
             keepExtensions: true,
-            uploadDir: '/tmp', // Use a temporary directory supported by Vercel
-            fileWriteStreamHandler: (file) => fs.createWriteStream('/tmp/' + file.originalFilename),
+            uploadDir: '/tmp', // Temporary directory for serverless environments
         });
 
         form.parse(req, async (err, fields, files) => {
@@ -46,20 +45,30 @@ export default async function handler(req, res) {
 
             let imageUrl = null;
 
-            // If an image is uploaded, upload it to Vercel Blob
+            // If an image is uploaded, attempt to upload it to Vercel Blob
             if (image) {
                 try {
+                    const filePath = image.filepath || image.path;
+
+                    // Validate file path
+                    if (!filePath) {
+                        console.error('File path is missing.');
+                        return res.status(400).json({ error: 'Image file path is missing.' });
+                    }
+
+                    // Read the image as a stream and upload it to Vercel Blob
                     const blobResponse = await fetch('https://api.vercel.com/v1/blobs', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
                             'Content-Type': 'application/octet-stream',
                         },
-                        body: fs.createReadStream(image.filepath || image.path),
+                        body: fs.createReadStream(filePath),
                     });
 
                     const blobData = await blobResponse.json();
 
+                    // Check if the image was successfully uploaded
                     if (blobResponse.ok && blobData.url) {
                         imageUrl = blobData.url;
                         console.log('Image uploaded to Vercel Blob:', imageUrl);
@@ -105,7 +114,7 @@ export default async function handler(req, res) {
                 }
 
                 const payload = {
-                    model: 'gpt-3.5-turbo',
+                    model: 'gpt-4-turbo',
                     messages: messages
                 };
 
