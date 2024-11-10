@@ -35,8 +35,8 @@ export default async function handler(req, res) {
             }
 
             // Check if userMessage is empty or whitespace-only
-            if (!userMessage.trim()) {
-                return res.status(400).json({ error: 'User message is required.' });
+            if (!userMessage.trim() && !image) {
+                return res.status(400).json({ error: 'User message or image is required.' });
             }
 
             // Encode the image file as a base64 string if an image is provided
@@ -52,23 +52,33 @@ export default async function handler(req, res) {
             }
 
             try {
-                // Construct the payload for OpenAI
+                // Construct the base messages array
                 const messages = [
                     {
                         role: 'system',
                         content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
-                    },
-                    { role: 'user', content: userMessage }
+                    }
                 ];
 
-                // If an image is provided, include it in the payload
+                // Add user message if provided
+                if (userMessage.trim()) {
+                    messages.push({ role: 'user', content: userMessage });
+                }
+
+                // If an image is provided, add a specific critique prompt
                 if (imageBase64) {
-                    messages.push({
-                        type: 'image_url',
-                        image_url: {
-                            url: `data:image/png;base64,${imageBase64}`
+                    messages.push(
+                        {
+                            role: 'user',
+                            content: "Here is an artwork I’d like you to critique. Please provide feedback on composition, technique, color usage, and any areas for improvement."
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:image/png;base64,${imageBase64}`
+                            }
                         }
-                    });
+                    );
                 }
 
                 const payload = {
