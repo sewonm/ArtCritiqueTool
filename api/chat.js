@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         const form = formidable({
             multiples: true,
             keepExtensions: true,
-            uploadDir: '/tmp',
+            uploadDir: '/tmp', // Temporary directory for serverless environments
         });
 
         form.parse(req, async (err, fields, files) => {
@@ -30,87 +30,110 @@ export default async function handler(req, res) {
                 return res.status(500).json({ error: 'Error parsing form data.' });
             }
 
-            let userMessage = fields.message || '';
+            let userMessage = fields.message;
             const image = files.image;
 
+            // Ensure userMessage is a string
+            if (typeof userMessage !== 'string') {
+                userMessage = String(userMessage);
+            }
+
+            // Check if userMessage is empty or whitespace-only
             if (!userMessage.trim() && !image) {
                 return res.status(400).json({ error: 'User message or image is required.' });
             }
 
             let imageUrl = null;
 
+            // If an image is uploaded, attempt to upload it to Vercel Blob
             if (image) {
                 try {
                     const filePath = image.filepath || image.path;
-                    const validImageTypes = ['image/jpeg', 'image/png'];
-                    const maxSize = 5 * 1024 * 1024;
 
-                    if (!validImageTypes.includes(image.mimetype) || image.size > maxSize) {
-                        return res.status(400).json({ error: 'Invalid image type or size too large.' });
+                    // Validate file path
+                    if (!filePath) {
+                        console.error('File path is missing.');
+                        return res.status(400).json({ error: 'Image file path is missing.' });
                     }
 
-                    const fileBuffer = fs.readFileSync(filePath);
+                    // Read the image as a stream and upload it to Vercel Blob
                     const blobResponse = await fetch('https://api.vercel.com/v1/blobs', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
                             'Content-Type': 'application/octet-stream',
                         },
-                        body: fileBuffer,
+                        body: fs.createReadStream(filePath),
                     });
 
                     const blobData = await blobResponse.json();
 
+                    // Check if the image was successfully uploaded
                     if (blobResponse.ok && blobData.url) {
                         imageUrl = blobData.url;
+                        console.log('Image uploaded to Vercel Blob:', imageUrl);
                     } else {
                         console.error('Failed to upload image to Vercel Blob:', blobData);
                         return res.status(500).json({ error: 'Failed to upload image to Vercel Blob.' });
                     }
 
                 } catch (error) {
-                    console.error('Error uploading image:', error);
-                    return res.status(500).json({ error: 'Image upload error.' });
+                    console.error('Error uploading image to Vercel Blob:', error);
+                    return res.status(500).json({ error: 'Error uploading image to Vercel Blob.' });
                 }
             }
 
             try {
+                // Construct the message payload for OpenAI API
                 const messages = [
                     {
                         role: 'system',
-                        content: "You are a friendly art critic. Provide critiques only when asked about art, otherwise respond naturally."
-                    },
+                        content: "You are a friendly and conversational art critic. Only provide art critiques or insights when the user asks directly about art. If the user makes casual conversation or greetings, respond naturally without discussing art unless it’s mentioned."
+                    }
                 ];
 
+                // Add the user message if provided
                 if (userMessage.trim()) {
                     messages.push({ role: 'user', content: userMessage });
                 }
 
+                // If an image URL is available, ask for a critique of the artwork
                 if (imageUrl) {
-                    messages.push({
-                        role: 'user',
-                        content: `Here is an artwork I’d like you to critique. Image URL: ${imageUrl}`
-                    });
+                    messages.push(
+                        {
+                            role: 'user',
+                            content: "Here is an artwork I’d like you to critique. Please provide feedback on composition, technique, color usage, and any areas for improvement."
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: imageUrl
+                            }
+                        }
+                    );
                 }
 
                 const payload = {
                     model: 'gpt-4-turbo',
-                    messages,
+                    messages: messages
                 };
 
+                // Send the request to OpenAI API
                 const response = await axios.post('https://api.openai.com/v1/chat/completions', payload, {
                     headers: {
                         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                        'Content-Type': 'application/json',
-                    },
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                const completion = response.data.choices[0]?.message?.content;
-                res.status(200).json({ message: completion });
+                res.status(200).json(response.data);
 
             } catch (error) {
-                console.error('OpenAI API error:', error.message || error.response?.data);
-                res.status(500).json({ error: 'OpenAI API error.', details: error.message });
+                console.error('Error connecting to OpenAI API:', error.message || error.response?.data);
+                res.status(500).json({
+                    error: 'Error connecting to OpenAI API.',
+                    details: error.message || error.response?.data || error
+                });
             }
         });
     } else {
