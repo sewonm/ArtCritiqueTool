@@ -43,6 +43,13 @@ export default async function handler(req, res) {
             let imageBase64 = null;
             if (image) {
                 try {
+                    // Verify the image object and its filepath
+                    if (!image.filepath) {
+                        console.error('Image file is missing or filepath is undefined.');
+                        return res.status(400).json({ error: 'Image file is missing or invalid.' });
+                    }
+            
+                    console.log('File details:', image);
                     const imageBuffer = fs.readFileSync(image.filepath);
                     imageBase64 = imageBuffer.toString('base64');
                 } catch (error) {
