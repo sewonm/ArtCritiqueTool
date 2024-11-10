@@ -18,7 +18,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const form = formidable({ multiples: true });
+        const form = formidable({
+            multiples: true,
+            keepExtensions: true,
+            uploadDir: '/tmp', // Temporary directory for serverless environments like Vercel
+        });
 
         form.parse(req, async (err, fields, files) => {
             if (err) {
@@ -43,14 +47,14 @@ export default async function handler(req, res) {
             let imageBase64 = null;
             if (image) {
                 try {
-                    // Verify the image object and its filepath
-                    if (!image.file.path) {
-                        console.error('Image file is missing or filepath is undefined.');
-                        return res.status(400).json({ error: 'Image file is missing or invalid.' });
+                    const imagePath = image.filepath || image.path;
+                    if (!imagePath) {
+                        console.error('Filepath is missing.');
+                        return res.status(400).json({ error: 'Filepath is missing or undefined.' });
                     }
             
-                    console.log('File details:', image);
-                    const imageBuffer = fs.readFileSync(image.file.path);
+                    console.log('Reading image from:', imagePath);
+                    const imageBuffer = await fs.promises.readFile(imagePath);
                     imageBase64 = imageBuffer.toString('base64');
                 } catch (error) {
                     console.error('Error reading image file:', error);
