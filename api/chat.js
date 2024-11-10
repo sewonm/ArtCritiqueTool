@@ -18,7 +18,12 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const form = formidable({ multiples: true });
+        const form = formidable({
+            multiples: true,
+            keepExtensions: true,
+            uploadDir: '/tmp', // Use a temporary directory supported by Vercel
+            fileWriteStreamHandler: (file) => fs.createWriteStream('/tmp/' + file.originalFilename),
+        });
 
         form.parse(req, async (err, fields, files) => {
             if (err) {
