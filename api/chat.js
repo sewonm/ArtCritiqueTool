@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import formidable from 'formidable';
 import fs from 'fs';
+import { put } from '@vercel/blob';
 
 dotenv.config();
 
@@ -56,30 +57,34 @@ export default async function handler(req, res) {
                         return res.status(400).json({ error: 'Image file path is missing.' });
                     }
 
-                    // Read the image as a stream and upload it to Vercel Blob
-                    const blobResponse = await fetch('https://api.vercel.com/v1/blobs', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
-                            'Content-Type': 'application/octet-stream',
-                        },
-                        body: fs.createReadStream(filePath),
-                    });
-
-                    const blobData = await blobResponse.json();
-
-                    // Check if the image was successfully uploaded
-                    if (blobResponse.ok && blobData.url) {
-                        imageUrl = blobData.url;
-                        console.log('Image uploaded to Vercel Blob:', imageUrl);
-                    } else {
-                        console.error('Failed to upload image to Vercel Blob:', blobData);
-                        return res.status(500).json({ error: 'Failed to upload image to Vercel Blob.' });
+                    // Validate file type
+                    const fileType = image.mimetype;
+                    if (!fileType || !fileType.startsWith('image/')) {
+                        return res.status(400).json({ error: 'Invalid file type. Only images are allowed.' });
                     }
 
+                    // Read file and upload to Vercel Blob
+                    try {
+                        const fileData = fs.readFileSync(filePath);
+                        const blob = await put(image.originalFilename || 'upload.jpg', fileData, {
+                            access: 'public',
+                            contentType: fileType
+                        });
+
+                        imageUrl = blob.url;
+                        console.log('Image uploaded to Vercel Blob:', imageUrl);
+
+                        // Clean up the temporary file
+                        fs.unlink(filePath, (err) => {
+                            if (err) console.error('Error cleaning up temporary file:', err);
+                        });
+                    } catch (error) {
+                        console.error('Error reading or uploading file:', error);
+                        return res.status(500).json({ error: 'Error processing image file.' });
+                    }
                 } catch (error) {
-                    console.error('Error uploading image to Vercel Blob:', error);
-                    return res.status(500).json({ error: 'Error uploading image to Vercel Blob.' });
+                    console.error('Error handling image upload:', error);
+                    return res.status(500).json({ error: 'Error handling image upload.' });
                 }
             }
 
